@@ -1,4 +1,18 @@
+# -*- encoding: utf-8 -*-
 import pilas
+
+
+def obtener_numero_al_azar(a, b):
+    """Retorna un número a azar comprendido entre
+    'a' y 'b', por ejemplo:
+
+        >>> obtener_numero_al_azar(20, 100)
+        52
+    """
+    import random
+    return random.randint(a, b)
+
+
 pilas.iniciar(ancho=800, alto=600)
 pilas.reiniciar_si_cambia(__file__)
 
@@ -36,7 +50,7 @@ class Accion:
 class Caminando(Accion):
 
     def iniciar(self, actor):
-        pass
+        actor.definir_animacion([3, 4, 5, 4])
 
     def actualizar(self, actor):
         velocidad = 10
@@ -61,7 +75,7 @@ class Caminando(Accion):
 class Parado(Accion):
 
     def iniciar(self, actor):
-        pass
+        actor.definir_animacion([2])
 
     def actualizar(self, actor):
         if pilas.mundo.control.izquierda or pilas.mundo.control.derecha:
@@ -70,11 +84,13 @@ class Parado(Accion):
         if pilas.mundo.control.arriba:
             actor.realizar_accion(Saltando())
 
+
 class Saltando(Accion):
 
     def iniciar(self, actor):
         self.velocidad_salto = 20
         self.y = actor.y
+        actor.definir_animacion([0])
 
     def actualizar(self, actor):
         velocidad = 7
@@ -95,6 +111,24 @@ class Saltando(Accion):
 
         actor.altura_salto = actor.y - self.y
 
+
+class ProtagonistaPerdiendo(pilas.actores.Actor):
+
+    def __init__(self, x, y, espejado):
+        self.grilla = pilas.imagenes.cargar_grilla('../data/protagonista.png', 6)
+        pilas.actores.Actor.__init__(self)
+        self.imagen = self.grilla
+        self.imagen.definir_cuadro(1)
+        self.x = x
+        self.y = y
+        self.espejado = espejado
+        self.velocidad_salto = 10
+        self.rotacion = [-90], 1
+
+    def actualizar(self):
+        self.velocidad_salto -= 0.7
+        self.y += self.velocidad_salto
+
 class Protagonista(pilas.actores.Actor):
 
     def __init__(self):
@@ -105,35 +139,122 @@ class Protagonista(pilas.actores.Actor):
         self.realizar_accion(Parado())
         self.altura_salto = 0
         self.radio_de_colision = 50
+        self.figura = pilas.fisica.Circulo(self.x, self.y, 30, dinamica=False)
 
     def actualizar(self):
+        self.avanzar_animacion()
         self.accion.actualizar(self)
+        self.figura.x = self.x
+        self.figura.y = self.y
 
     def realizar_accion(self, accion):
         accion.iniciar(self)
         self.accion = accion
 
+    def definir_cuadro(self, indice):
+        self.imagen.definir_cuadro(indice)
+
+    def definir_animacion(self, cuadros):
+        self.indice_animacion = 0
+        self.cuadros_animacion = cuadros
+        self.contador_animacion = 0
+        self.definir_cuadro(cuadros[0])          # Define el cuadro inicial de la animación.
+
+    def avanzar_animacion(self):
+        self.contador_animacion += 1
+
+        if self.contador_animacion > 5:
+            self.contador_animacion = 0
+            cuadro = self.obtener_siguiente_cuadro()
+            self.definir_cuadro(cuadro)
+
+    def obtener_siguiente_cuadro(self):
+        """Retorna el siguiente numero de imagen en la grilla con respecto
+        a la animación.
+
+        Por ejemplo, si la animación es [0, 1, 2], esta función
+        va a devolver los números 0, 1, 2, 0, 1, 2 ... cuantas veces se
+        llame.
+        """
+        self.indice_animacion += 1
+
+        if self.indice_animacion == len(self.cuadros_animacion):
+            self.indice_animacion = 0
+
+        return self.cuadros_animacion[self.indice_animacion]
+
 class Calabaza(pilas.actores.Actor):
+    """Representa al protagonista de nuestro juego."""
 
     def __init__(self, x=0, y=0):
         imagen = "../data/calabaza.png"
         pilas.actores.Actor.__init__(self, imagen, x, y)
         figura = pilas.fisica.Circulo(x, y, 70)
+        figura.rotacion = obtener_numero_al_azar(0, 360)
         self.imitar(figura)
         self.radio_de_colision = 70
+        self.escala = 0.8
 
 
+class CalabazaExplotando(pilas.actores.Actor):
+
+    def __init__(self, x=0, y=0, rotacion=0):
+        imagen = "../data/calabaza-gris.png"
+        pilas.actores.Actor.__init__(self, imagen, x, y)
+        self.rotacion = rotacion
+        self.escala = 0.8
+        self.escala = [0], 0.2
+        self.transparencia = [100], 0.3
+        self.contador = 0
+
+    def actualizar(self):
+        self.contador += 1
+
+        if self.contador > 20:
+            self.eliminar()
+
+class EfectoGolpe(pilas.actores.Animacion):
+    """Muestra un destello para representar una colisión de golpe."""
+
+    def __init__(self, x, y):
+        import random
+        grilla = pilas.imagenes.cargar_grilla("golpe.png", 2)
+        pilas.actores.Animacion.__init__(self, grilla, ciclica=False, velocidad=10, x=x, y=y)
+        self.escala = 6.5
+        self.escala = [1.5], 0.1
+        self.rotacion = random.choice([0, 45, 90, 150])
+        self.z = -1000
+
+
+sonido_golpe = pilas.sonidos.cargar("../data/golpe.wav")
 pilas.fondos.Fondo('../data/fondo.png')
 protagonista = Protagonista()
-Sombra(protagonista)
-calabazas = Calabaza() * 2
+sombra = Sombra(protagonista)
+calabazas = []
+
+
+def crear_calabaza():
+    x = obtener_numero_al_azar(-300, 300)
+    nueva_calabaza = Calabaza(x, 350)
+    calabazas.append(nueva_calabaza)
+    return True              # Le indicamos a la tarea que se repita
+
+pilas.mundo.agregar_tarea(2, crear_calabaza)
 
 
 def cuando_toca_calabaza(protagonista, calabaza):
-    calabaza.eliminar()
+
+    if protagonista.y > calabaza.y + 50:
+        efecto = CalabazaExplotando(calabaza.x, calabaza.y, calabaza.rotacion)
+        calabaza.eliminar()
+    else:
+        protagonista.eliminar()
+        protagonista.figura.eliminar()
+        sombra.eliminar()
+        ProtagonistaPerdiendo(protagonista.x, protagonista.y, protagonista.espejado)
+        EfectoGolpe(protagonista.x, protagonista.y)
 
 
 pilas.mundo.colisiones.agregar(protagonista, calabazas, cuando_toca_calabaza)
-
-
+pilas.escena_actual().fisica.eliminar_techo()
 pilas.ejecutar()
