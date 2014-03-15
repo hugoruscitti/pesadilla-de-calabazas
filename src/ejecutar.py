@@ -92,6 +92,7 @@ class Saltando(Accion):
         self.y = actor.y
         actor.definir_animacion([0])
 
+
     def actualizar(self, actor):
         velocidad = 7
         self.velocidad_salto -= 1
@@ -110,6 +111,7 @@ class Saltando(Accion):
             actor.espejado = False
 
         actor.altura_salto = actor.y - self.y
+        self.aplicar_limites_del_escenario(actor)
 
 
 class ProtagonistaPerdiendo(pilas.actores.Actor):
@@ -128,6 +130,9 @@ class ProtagonistaPerdiendo(pilas.actores.Actor):
     def actualizar(self):
         self.velocidad_salto -= 0.7
         self.y += self.velocidad_salto
+
+        if self.y < -600:
+            pilas.escena_actual().mostrar_escena_game_over()
 
 class Protagonista(pilas.actores.Actor):
 
@@ -226,35 +231,75 @@ class EfectoGolpe(pilas.actores.Animacion):
         self.z = -1000
 
 
-sonido_golpe = pilas.sonidos.cargar("../data/golpe.wav")
-pilas.fondos.Fondo('../data/fondo.png')
-protagonista = Protagonista()
-sombra = Sombra(protagonista)
-calabazas = []
+class EscenaGameOver(pilas.escena.Base):
+
+    def iniciar(self):
+        pilas.fondos.Fondo('../data/fondo.png')
+        manchas = pilas.actores.Actor('../data/manchas.png')
+        manchas.transparencia = 10
+
+        pilas.actores.Texto("Tu puntaje es: %d" %(self.puntaje), magnitud=40, y=20)
+        pilas.actores.Texto(u"Pulsá espacio para volver a empezar", y=-50)
+        pilas.eventos.pulsa_tecla.conectar(self.cuando_pulsa_tecla)
+
+    def cuando_pulsa_tecla(self, evento):
+        if evento.texto == " ": # Si es la tecla espacio
+            pilas.cambiar_escena(EscenaJuego())
+
+    def definir_puntaje(self, puntaje):
+        self.puntaje = puntaje
+
+class EscenaJuego(pilas.escena.Base):
+
+    def iniciar(self):
+        sonido_golpe = pilas.sonidos.cargar("../data/golpe.wav")
+        pilas.fondos.Fondo('../data/fondo.png')
+        protagonista = Protagonista()
+        sombra = Sombra(protagonista)
+        calabazas = []
+
+        def crear_calabaza():
+            x = obtener_numero_al_azar(-300, 300)
+            nueva_calabaza = Calabaza(x, 350)
+            calabazas.append(nueva_calabaza)
+            return True              # Le indicamos a la tarea que se repita
+
+        pilas.mundo.agregar_tarea(2, crear_calabaza)
+
+        pilas.actores.Texto("Puntaje: ", x=-340, y=270)
+        self.puntaje = pilas.actores.Puntaje(x=-290, y=270, color=pilas.colores.blanco)
+
+        def cuando_toca_calabaza(protagonista, calabaza):
+
+            if protagonista.y > calabaza.y + 50:
+                efecto = CalabazaExplotando(calabaza.x, calabaza.y, calabaza.rotacion)
+                calabaza.eliminar()
+
+                # Aumenta y realiza un efecto sobre el puntaje.
+                self.puntaje.aumentar(5)
+                import random
+                self.puntaje.escala = 1.5
+                self.puntaje.escala = [1], 0.2
+                self.puntaje.rotacion = random.choice([30, 20, 10, 50, 30])
+                self.puntaje.rotacion = [0], 0.25
+            else:
+                protagonista.eliminar()
+                protagonista.figura.eliminar()
+                sombra.eliminar()
+                ProtagonistaPerdiendo(protagonista.x, protagonista.y, protagonista.espejado)
+                EfectoGolpe(protagonista.x, protagonista.y)
+
+        pilas.mundo.colisiones.agregar(protagonista, calabazas, cuando_toca_calabaza)
+        pilas.escena_actual().fisica.eliminar_techo()
+
+    def mostrar_escena_game_over(self):
+        puntaje_como_valor = self.puntaje.obtener()
+        nueva_escena = EscenaGameOver()
+        nueva_escena.definir_puntaje(puntaje_como_valor)
+        pilas.cambiar_escena(nueva_escena)
 
 
-def crear_calabaza():
-    x = obtener_numero_al_azar(-300, 300)
-    nueva_calabaza = Calabaza(x, 350)
-    calabazas.append(nueva_calabaza)
-    return True              # Le indicamos a la tarea que se repita
-
-pilas.mundo.agregar_tarea(2, crear_calabaza)
 
 
-def cuando_toca_calabaza(protagonista, calabaza):
-
-    if protagonista.y > calabaza.y + 50:
-        efecto = CalabazaExplotando(calabaza.x, calabaza.y, calabaza.rotacion)
-        calabaza.eliminar()
-    else:
-        protagonista.eliminar()
-        protagonista.figura.eliminar()
-        sombra.eliminar()
-        ProtagonistaPerdiendo(protagonista.x, protagonista.y, protagonista.espejado)
-        EfectoGolpe(protagonista.x, protagonista.y)
-
-
-pilas.mundo.colisiones.agregar(protagonista, calabazas, cuando_toca_calabaza)
-pilas.escena_actual().fisica.eliminar_techo()
+pilas.cambiar_escena(EscenaJuego())
 pilas.ejecutar()
