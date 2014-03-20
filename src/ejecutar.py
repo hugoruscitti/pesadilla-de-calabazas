@@ -134,36 +134,20 @@ class ProtagonistaPerdiendo(pilas.actores.Actor):
         if self.y < -600:
             pilas.escena_actual().mostrar_escena_game_over()
 
-class Protagonista(pilas.actores.Actor):
+class Animacion:
 
     def __init__(self):
-        self.grilla = pilas.imagenes.cargar_grilla('../data/protagonista.png', 6)
-        pilas.actores.Actor.__init__(self)
-        self.imagen = self.grilla
-        self.y = -200
-        self.realizar_accion(Parado())
-        self.altura_salto = 0
-        self.radio_de_colision = 50
-        self.figura = pilas.fisica.Circulo(self.x, self.y, 30, dinamica=False)
-
-    def actualizar(self):
-        self.avanzar_animacion()
-        self.accion.actualizar(self)
-        self.figura.x = self.x
-        self.figura.y = self.y
-
-    def realizar_accion(self, accion):
-        accion.iniciar(self)
-        self.accion = accion
+        self.cuadros_animacion = [-1]
 
     def definir_cuadro(self, indice):
         self.imagen.definir_cuadro(indice)
 
     def definir_animacion(self, cuadros):
-        self.indice_animacion = 0
-        self.cuadros_animacion = cuadros
-        self.contador_animacion = 0
-        self.definir_cuadro(cuadros[0])          # Define el cuadro inicial de la animación.
+        if cuadros != self.cuadros_animacion:
+            self.indice_animacion = 0
+            self.cuadros_animacion = cuadros
+            self.contador_animacion = 0
+            self.definir_cuadro(cuadros[0])          # Define el cuadro inicial de la animación.
 
     def avanzar_animacion(self):
         self.contador_animacion += 1
@@ -187,6 +171,31 @@ class Protagonista(pilas.actores.Actor):
             self.indice_animacion = 0
 
         return self.cuadros_animacion[self.indice_animacion]
+
+class Protagonista(pilas.actores.Actor, Animacion):
+
+    def __init__(self):
+        self.grilla = pilas.imagenes.cargar_grilla('../data/protagonista.png', 6)
+        pilas.actores.Actor.__init__(self)
+        self.imagen = self.grilla
+        self.y = -200
+        Animacion.__init__(self)
+        self.realizar_accion(Parado())
+        self.altura_salto = 0
+        self.radio_de_colision = 50
+        self.figura = pilas.fisica.Circulo(self.x, self.y, 30, dinamica=False)
+
+
+    def actualizar(self):
+        self.avanzar_animacion()
+        self.accion.actualizar(self)
+        self.figura.x = self.x
+        self.figura.y = self.y
+
+    def realizar_accion(self, accion):
+        accion.iniciar(self)
+        self.accion = accion
+
 
 class Calabaza(pilas.actores.Actor):
     """Representa al protagonista de nuestro juego."""
@@ -256,6 +265,7 @@ class EscenaJuego(pilas.escena.Base):
         pilas.fondos.Fondo('../data/fondo.png')
         protagonista = Protagonista()
         sombra = Sombra(protagonista)
+
         calabazas = []
 
         def crear_calabaza():
@@ -283,6 +293,7 @@ class EscenaJuego(pilas.escena.Base):
                 self.puntaje.rotacion = random.choice([30, 20, 10, 50, 30])
                 self.puntaje.rotacion = [0], 0.25
             else:
+                sonido_golpe.reproducir()
                 protagonista.eliminar()
                 protagonista.figura.eliminar()
                 sombra.eliminar()

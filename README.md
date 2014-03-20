@@ -15,4 +15,11 @@ simple, podés investigarlo en este link:
 
 ## Video de Previsualización
 
-https://www.youtube.com/watch?v=hEOZOhHxAGs
+ - https://www.youtube.com/watch?v=hEOZOhHxAGs
+
+
+## Recursos utilizados
+
+La música de fondo:
+
+ - http://www.newgrounds.com/audio/listen/570511
