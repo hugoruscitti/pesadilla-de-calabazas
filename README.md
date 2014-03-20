@@ -20,6 +20,10 @@ simple, podés investigarlo en este link:
 
 ## Recursos utilizados
 
+Sonidos:
+
+- http://www.freesound.org/people/LloydEvans09/
+
 La música de fondo:
 
  - http://www.newgrounds.com/audio/listen/570511

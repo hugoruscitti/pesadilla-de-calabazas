@@ -91,6 +91,7 @@ class Saltando(Accion):
         self.velocidad_salto = 20
         self.y = actor.y
         actor.definir_animacion([0])
+        actor.sonido_saltar.reproducir()
 
 
     def actualizar(self, actor):
@@ -184,6 +185,7 @@ class Protagonista(pilas.actores.Actor, Animacion):
         self.altura_salto = 0
         self.radio_de_colision = 50
         self.figura = pilas.fisica.Circulo(self.x, self.y, 30, dinamica=False)
+        self.sonido_saltar = pilas.sonidos.cargar("../data/187025__lloydevans09__jump1.wav")
 
 
     def actualizar(self):
@@ -262,6 +264,8 @@ class EscenaJuego(pilas.escena.Base):
 
     def iniciar(self):
         sonido_golpe = pilas.sonidos.cargar("../data/golpe.wav")
+        sonido_pisar = pilas.sonidos.cargar("../data/187024__lloydevans09__jump2.wav")
+
         pilas.fondos.Fondo('../data/fondo.png')
         protagonista = Protagonista()
         sombra = Sombra(protagonista)
@@ -284,6 +288,7 @@ class EscenaJuego(pilas.escena.Base):
             if protagonista.y > calabaza.y + 50:
                 efecto = CalabazaExplotando(calabaza.x, calabaza.y, calabaza.rotacion)
                 calabaza.eliminar()
+                sonido_pisar.reproducir()
 
                 # Aumenta y realiza un efecto sobre el puntaje.
                 self.puntaje.aumentar(5)
@@ -310,7 +315,7 @@ class EscenaJuego(pilas.escena.Base):
         pilas.cambiar_escena(nueva_escena)
 
 
-
-
+musica = pilas.musica.cargar('data/570511_Lobby-Music-prod-by.mp3')
+musica.reproducir()
 pilas.cambiar_escena(EscenaJuego())
 pilas.ejecutar()
