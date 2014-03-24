@@ -16,6 +16,7 @@ def obtener_numero_al_azar(a, b):
 pilas.iniciar(ancho=800, alto=600)
 pilas.reiniciar_si_cambia(__file__)
 
+#asdasd
 
 class Sombra(pilas.actores.Actor):
 
@@ -185,7 +186,7 @@ class Protagonista(pilas.actores.Actor, Animacion):
         self.altura_salto = 0
         self.radio_de_colision = 50
         self.figura = pilas.fisica.Circulo(self.x, self.y, 30, dinamica=False)
-        self.sonido_saltar = pilas.sonidos.cargar("../data/187025__lloydevans09__jump1.wav")
+        self.sonido_saltar = pilas.sonidos.cargar("../data/saltar.wav")
 
 
     def actualizar(self):
@@ -264,7 +265,7 @@ class EscenaJuego(pilas.escena.Base):
 
     def iniciar(self):
         sonido_golpe = pilas.sonidos.cargar("../data/golpe.wav")
-        sonido_pisar = pilas.sonidos.cargar("../data/187024__lloydevans09__jump2.wav")
+        sonido_pisar = pilas.sonidos.cargar("../data/pisar.wav")
 
         pilas.fondos.Fondo('../data/fondo.png')
         protagonista = Protagonista()
@@ -315,7 +316,7 @@ class EscenaJuego(pilas.escena.Base):
         pilas.cambiar_escena(nueva_escena)
 
 
-musica = pilas.musica.cargar('data/570511_Lobby-Music-prod-by.mp3')
+musica = pilas.musica.cargar('data/musica.mp3')
 musica.reproducir()
 pilas.cambiar_escena(EscenaJuego())
 pilas.ejecutar()
