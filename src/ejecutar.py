@@ -235,7 +235,7 @@ class EfectoGolpe(pilas.actores.Animacion):
 
     def __init__(self, x, y):
         import random
-        grilla = pilas.imagenes.cargar_grilla("../golpe.png", 2)
+        grilla = pilas.imagenes.cargar_grilla("../data/golpe.png", 2)
         pilas.actores.Animacion.__init__(self, grilla, ciclica=False, velocidad=10, x=x, y=y)
         self.escala = 6.5
         self.escala = [1.5], 0.1
@@ -282,7 +282,7 @@ class EscenaJuego(pilas.escena.Base):
         pilas.mundo.agregar_tarea(2, crear_calabaza)
 
         pilas.actores.Texto("Puntaje: ", x=-340, y=270)
-        self.puntaje = pilas.actores.Puntaje(x=-290, y=270, color=pilas.colores.blanco)
+        self.puntaje = pilas.actores.Puntaje(x=-270, y=270, color=pilas.colores.blanco)
 
         def cuando_toca_calabaza(protagonista, calabaza):
 
