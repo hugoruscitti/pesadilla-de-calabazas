@@ -14,7 +14,7 @@ def obtener_numero_al_azar(a, b):
 
 
 pilas.iniciar(ancho=800, alto=600)
-pilas.reiniciar_si_cambia(__file__)
+#pilas.reiniciar_si_cambia(__file__)
 
 #asdasd
 
@@ -316,7 +316,7 @@ class EscenaJuego(pilas.escena.Base):
         pilas.cambiar_escena(nueva_escena)
 
 
-musica = pilas.musica.cargar('data/musica.mp3')
+musica = pilas.musica.cargar('../data/musica.mp3')
 musica.reproducir()
 pilas.cambiar_escena(EscenaJuego())
 pilas.ejecutar()
