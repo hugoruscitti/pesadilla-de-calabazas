@@ -184,7 +184,7 @@ class Protagonista(pilas.actores.Actor, Animacion):
         Animacion.__init__(self)
         self.realizar_accion(Parado())
         self.altura_salto = 0
-        self.radio_de_colision = 50
+        self.radio_de_colision = 60
         self.figura = pilas.fisica.Circulo(self.x, self.y, 30, dinamica=False)
         self.sonido_saltar = pilas.sonidos.cargar("../data/saltar.wav")
 
@@ -206,12 +206,22 @@ class Calabaza(pilas.actores.Actor):
     def __init__(self, x=0, y=0):
         imagen = "../data/calabaza.png"
         pilas.actores.Actor.__init__(self, imagen, x, y)
-        figura = pilas.fisica.Circulo(x, y, 70)
+        figura = pilas.fisica.Circulo(x, y, 70, restitucion=0.01)
         figura.rotacion = obtener_numero_al_azar(0, 360)
         self.imitar(figura)
         self.radio_de_colision = 70
-        self.escala = 0.8
+        self.escala = 0.6
+        self.activada = True
+        self.anterior_y = y
 
+    def actualizar(self):
+
+        if self.activada:
+            if self.anterior_y < self.y:
+                self.imagen = "../data/calabaza-desactivada.png"
+                self.activada = False
+
+        self.anterior_y = self.y
 
 class CalabazaExplotando(pilas.actores.Actor):
 
@@ -273,6 +283,8 @@ class EscenaJuego(pilas.escena.Base):
 
         calabazas = []
 
+        suelo = pilas.fisica.Rectangulo(-100, -270, 1000, 10, dinamica=False)
+
         def crear_calabaza():
             x = obtener_numero_al_azar(-300, 300)
             nueva_calabaza = Calabaza(x, 350)
@@ -286,7 +298,8 @@ class EscenaJuego(pilas.escena.Base):
 
         def cuando_toca_calabaza(protagonista, calabaza):
 
-            if protagonista.y > calabaza.y + 50:
+            # SI TOCA CON LOS PIES
+            if protagonista.y - 50 > calabaza.y:
                 efecto = CalabazaExplotando(calabaza.x, calabaza.y, calabaza.rotacion)
                 calabaza.eliminar()
                 sonido_pisar.reproducir()
@@ -298,7 +311,12 @@ class EscenaJuego(pilas.escena.Base):
                 self.puntaje.escala = [1], 0.2
                 self.puntaje.rotacion = random.choice([30, 20, 10, 50, 30])
                 self.puntaje.rotacion = [0], 0.25
-            else:
+
+
+            # SI TOCA CON LA CABEZA
+            if protagonista.y + 50 < calabaza.y:
+                if not calabaza.activada:
+                    return
                 sonido_golpe.reproducir()
                 protagonista.eliminar()
                 protagonista.figura.eliminar()
